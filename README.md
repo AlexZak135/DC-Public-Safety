@@ -24,7 +24,7 @@ causal inference and NLP techniques, as well as the results of other noteworthy 
 
 ## Files
 This is the [R script](https://github.com/AlexZak135/DC-Public-Safety/blob/main/Code/DC-Public-Safety-Code.R) containing the code used for this analysis, and this
-is the [dataset](https://github.com/AlexZak135/DC-Public-Safety/tree/main/Data) used in the R script.
+is the [dataset](https://github.com/AlexZak135/DC-Public-Safety/blob/main/Data/DC-Public-Safety-Data.csv) used in the R script.
 
 ## Outputs
 These are the [data visualizations](https://github.com/AlexZak135/DC-Public-Safety/tree/main/Outputs) that represent the main findings from the techniques used 
