@@ -9,7 +9,7 @@ are satisfied with all aspects of public safety, particularly with the city's po
 and the strategies they want to see implemented.
 
 Recognizing the importance of public safety and effective policing, in 2017, the Washington D.C. Office of the Deputy Mayor for Public Safety and Justice 
-conducted a survey that included both quantitative questions, such as those on the 5-Point Likert scale, and qualitative open-ended questions, in which 
+conducted a survey that included both quantitative questions, such as those on the Likert scale, and qualitative open-ended questions, in which 
 residents provided feedback on a wide range of topics related to the city's public safety, from experiences with police and police effectiveness to the 
 qualities a police chief should possess. In total, over 7,000 responses were provided by residents, and there was flexibility for residents to take the 
 survey either online or in person at locations such as recreation centers. The local government of Washington D.C. deemed the survey a major success, 
