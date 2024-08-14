@@ -23,7 +23,9 @@ sentiment analysis, and topic modeling, were used. Lastly, various data visualiz
 causal inference and NLP techniques, as well as the results of other noteworthy summary statistics, to best display the main findings and takeaways.
 
 ## Files
-This is the [R script](https://github.com/AlexZak135/DC-Public-Safety/blob/main/Code/DC-Public-Safety-Code.R) containing the code used for this analysis, and this is the [dataset](https://github.com/AlexZak135/DC-Public-Safety/tree/main/Data) used in the R script.
+This is the [R script](https://github.com/AlexZak135/DC-Public-Safety/blob/main/Code/DC-Public-Safety-Code.R) containing the code used for this analysis, and this
+is the [dataset](https://github.com/AlexZak135/DC-Public-Safety/tree/main/Data) used in the R script.
 
 ## Outputs
-These are the [data visualizations](https://github.com/AlexZak135/DC-Public-Safety/tree/main/Outputs) that represent the main findings from the NLP techniques used to analyze the open-ended survey questions.
+These are the [data visualizations](https://github.com/AlexZak135/DC-Public-Safety/tree/main/Outputs) that represent the main findings from the techniques used 
+to analyze both the quantitative and qualitative survey questions.
