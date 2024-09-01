@@ -558,7 +558,7 @@ effect_table <- map_dfc(list(effect_lr1, effect_lr2), function(lr) {
                      AME = c("", "—", "", "—", "", "—"), 
                      `95% CI` = c("", "—", "", "—", "", "—"),
                      `p-value` = c("", "", "", "", "", ""))) |>
-    # Change the order of the columns and modify values of a column
+    # Change the order of the rows and modify values of a column
     slice(1, 6, 7, 2, 3, 8, 9, 4, 10, 11, 5) |>
     mutate(Variable = if_else(  
       !Variable %in% c("Age", "Ethnicity", "Gender", "Interaction"), 
