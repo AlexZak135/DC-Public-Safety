@@ -1,6 +1,6 @@
 # Title: DC Public Safety Analysis
 # Author: Alexander Zakrzeski
-# Date: September 1, 2024
+# Date: September 15, 2024
 
 # Part 1: Setup and Configuration
 
@@ -13,7 +13,7 @@ library(stringr)
 library(tibble)
 library(tidyr)
 
-# Load to visualize data
+# Load to produce charts and tables
 library(ggplot2)
 library(gt)
 library(scales)
@@ -112,7 +112,7 @@ plot_props <- function(dataframe, column1, column2, column3, margin_size) {
 }
 
 # Define a function to customize the theme of a horizontal bar chart
-theme_custom <- function() {   
+theme_custom <- function(axis_title = FALSE) {   
   # Create an empty theme  
   empty <- theme_void() 
   
@@ -124,7 +124,6 @@ theme_custom <- function() {
                               size = 17, face = "bold"),
     panel.grid.major.x = element_line(linetype = 3, linewidth = 0.3, 
                                       color = "#808080"), 
-    axis.title.x = element_text(margin = margin(10, 0, 0, 0), size = 15), 
     axis.text.x = element_text(size = 14, color = "#000000"),
     axis.text.y = element_text(margin = margin(0, -20, 0, 0), size = 14, 
                                color = "#000000", hjust = 1), 
@@ -135,9 +134,16 @@ theme_custom <- function() {
     legend.margin = margin(0, 0, 10, 0)  
     ) 
   
+  # Conditionally add an x-axis title
+  if (axis_title) { 
+    custom <- custom + theme( 
+      axis.title.x = element_text(margin = margin(10, 0, 0, 0), size = 15) 
+      ) 
+  }
+  
   # Return the custom theme 
   return(custom)  
-}
+} 
 
 # Part 2: Data Preprocessing
 
@@ -167,7 +173,7 @@ safety <- read_csv("DC-Public-Safety-Data.csv") |>
            ethnicity == "African American" ~ "Black", 
            ethnicity == "Caucasian" ~ "White", 
            ethnicity == "Unknown" ~ NA_character_, 
-           TRUE ~ "Other"     
+           .default = "Other"     
            ) |>      
                      factor(levels = c("Other", "Black", "White")), 
          age = if_else( 
@@ -176,19 +182,19 @@ safety <- read_csv("DC-Public-Safety-Data.csv") |>
          residency = case_when( 
            residency %in% c("<1 year", "1-5 years", "6-10 years") ~ "<=10",  
            residency %in% c("11-15 years", "16-20 years", ">20 years") ~ ">10", 
-           TRUE ~ NA_character_   
+           .default = NA_character_   
            ),  
          involv = case_when(  
            involv %in% c("Slightly Involved (1 - 6 Hour(s))",  
                          "Involved (7 - 12 Hours)", 
                          "Very Involved (12+ Hours)") ~ "Yes",  
            involv == "Not Involved" ~ "No",  
-           TRUE ~ NA_character_   
+           .default = NA_character_   
            ), 
          int_freq = case_when( 
            int_freq %in% c("Monthly", "Weekly", "Daily") ~ "At Least Monthly",  
            is.na(int_freq) ~ NA_character_, 
-           TRUE ~ "Less than Monthly"  
+           .default = "Less than Monthly"  
            ),
          int_feel = str_to_title(int_feel) |>
                     factor(levels = c("Very Positive", "Positive", "Neutral", 
@@ -203,7 +209,7 @@ safety <- read_csv("DC-Public-Safety-Data.csv") |>
          across(c(police_effect, mpd_effect), ~ case_when( 
            .x == "Very Effective" ~ "Effective", 
            .x == "Very Ineffective" ~ "Ineffective", 
-           TRUE ~ .x   
+           .default = .x   
            )),
          imp_qual = if_else( 
            imp_qual %in% c(".", "#NAME?", "Do not know", "Dont know", 
@@ -540,7 +546,7 @@ effect_table <- map_dfc(list(effect_lr1, effect_lr2), function(lr) {
       `p-value` = case_when( 
         p < 0.001 ~ "<0.001", 
         abs(p) >= 0.005 ~ as.character(round(p, 2)), 
-        TRUE ~ as.character(round(p, 3))   
+        .default = as.character(round(p, 3))   
         ),
       factor = case_when(   
         factor == "age" ~ "Age",
@@ -633,7 +639,7 @@ ggplot(effect_tfidf, aes(x = reorder(ngram, scaled_tf_idf), y = scaled_tf_idf,
        x = "", y = "Scaled TF-IDF Score (x1,000)") +
   guides(fill = guide_legend(title = "")) +
   coord_flip() + 
-  theme_custom()
+  theme_custom(axis_title = TRUE)
 
 # Select columns, rename columns, and reshape the data to be longer
 effect_actions <- safety |> 
@@ -696,7 +702,7 @@ chief_issue <- safety |>
       ngram == "gang" ~ "gangs",
       ngram == "train" ~ "training",
       ngram == "violent crimes" ~ "violent crime", 
-      TRUE ~ ngram  
+      .default = ngram  
       )) |>  
   # Generate term frequencies, filter, and modify values in a column
   count(issue_rank, ngram) |>
@@ -715,7 +721,7 @@ ggplot(chief_issue, aes(x = reorder(ngram, n), y = n, fill = issue_rank)) +
        x = "", y = "Frequency") +
   guides(fill = guide_legend(title = "", reverse = TRUE)) +
   coord_flip() + 
-  theme_custom()  
+  theme_custom(axis_title = TRUE)  
 
 # Drop rows, breaks values into multiple rows, and modify values in a column
 chief_lead <- safety |> 
@@ -731,7 +737,7 @@ chief_lead <- safety |>
     lead_qual == "Provides Clear Vision and Goals" ~ "Clear Vision", 
     lead_qual == "Strong Work Ethic" ~ "Work Ethic", 
     lead_qual == "Willingness to Listen" ~ "Willing to Listen", 
-    TRUE ~ lead_qual     
+    .default = lead_qual     
     )) |>
   # Generate proportions and the appropriate labels 
   count(lead_qual) |> 
