@@ -27,5 +27,5 @@ This is the [R script](https://github.com/AlexZak135/DC-Public-Safety/blob/main/
 is the [dataset](https://github.com/AlexZak135/DC-Public-Safety/blob/main/Data/DC-Public-Safety-Data.csv) used in the R script.
 
 ## Outputs
-These are the [data visualizations](https://github.com/AlexZak135/DC-Public-Safety/tree/main/Outputs) that represent the main findings from the techniques used 
+These are the [outputs](https://github.com/AlexZak135/DC-Public-Safety/tree/main/Outputs) that represent the main findings from the techniques used 
 to analyze both the quantitative and qualitative survey questions.
