@@ -30,7 +30,7 @@ library(vader)
 
 # Define a function to tokenize text
 tokenize_text <- function(dataframe, column) {   
-  ngrams <- map_df(1:3, function(number) {  
+  ngrams <- map_dfr(1:3, function(number) {  
     # Tokenize text into n-grams with specified size "number" 
     processed <- dataframe |>  
       drop_na(all_of(column)) |> 
@@ -64,7 +64,7 @@ plot_props <- function(dataframe, column1, column2, column3, margin_size) {
   # Create a stacked bar chart to display proportions  
   plot <- ggplot(dataframe, aes(x = !!sym(column1), y = !!sym(column2), 
                                 fill = !!sym(column3))) +   
-    geom_col(width = 0.8, position = "stack") +
+    geom_col(width = 0.8) +
     geom_text(aes(label = pct), position = position_stack(vjust = 0.5), 
               size = 5, color = "#ffffff") + 
     geom_hline(yintercept = 0, linewidth = 1.35, color = "#000000") + 
