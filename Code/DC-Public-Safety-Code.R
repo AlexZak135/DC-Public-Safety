@@ -1,6 +1,6 @@
 # Title: DC Public Safety Analysis
 # Author: Alexander Zakrzeski
-# Date: September 15, 2024
+# Date: October 18, 2024
 
 # Part 1: Setup and Configuration
 
@@ -152,7 +152,7 @@ safety <- read_csv("DC-Public-Safety-Data.csv") |>
   # Rename columns, create a new column, and change the position of a column
   rename_with(tolower) |>
   rename(id = objectid, 
-         ethnicity = eth, 
+         race_eth = eth, 
          residency = livedindistrict,
          int_freq = interactfreq, 
          int_feel = interactfeel, 
@@ -169,10 +169,10 @@ safety <- read_csv("DC-Public-Safety-Data.csv") |>
   mutate(id = as.character(id),  
          gender = na_if(gender, "Other") |> 
                   factor(levels = c("Male", "Female")), 
-         ethnicity = case_when(   
-           ethnicity == "African American" ~ "Black", 
-           ethnicity == "Caucasian" ~ "White", 
-           ethnicity == "Unknown" ~ NA_character_, 
+         race_eth = case_when(   
+           race_eth == "African American" ~ "Black", 
+           race_eth == "Caucasian" ~ "White", 
+           race_eth == "Unknown" ~ NA_character_, 
            .default = "Other"     
            ) |>      
                      factor(levels = c("Other", "Black", "White")), 
@@ -233,20 +233,20 @@ rm(incl_nt, neu_set)
 
 # Drop rows and modify values in a column
 demographic1 <- safety |> 
-  drop_na(gender, ethnicity, residency) |> 
+  drop_na(gender, race_eth, residency) |> 
   mutate(residency = if_else(  
     residency == ">10",  
     "Resided for Over 10 Years in D.C.", "Resided for up to 10 Years in D.C."      
     )) |>  
   # Get proportions 
-  count(gender, ethnicity, residency) |>
+  count(gender, race_eth, residency) |>
   group_by(residency) |>
   mutate(prop = round(n / sum(n), 2)) |> 
   ungroup() |>
   select(-n)
 
 # Create a faceted bar chart to display proportions
-ggplot(demographic1, aes(x = ethnicity, y = prop, fill = gender)) +   
+ggplot(demographic1, aes(x = race_eth, y = prop, fill = gender)) +   
   geom_col(width = 0.85, position = "dodge") + 
   geom_text(aes(label = percent(prop, accuracy = 1)), 
             position = position_dodge(0.85), vjust = -1, hjust = 0.5, 
@@ -255,7 +255,8 @@ ggplot(demographic1, aes(x = ethnicity, y = prop, fill = gender)) +
   scale_y_continuous(limits = c(0, 0.48), breaks = seq(0, 0.48, by = 0.15), 
                      labels = percent) + 
   scale_fill_manual(values = c("#5e9732", "#0078ae")) + 
-  labs(title = "Figure 1: Percentage of Respondents by Ethnicity and Gender", 
+  labs(title = str_squish("Figure 1: Percentage of Respondents by Race/Ethnicity
+                           and Gender"), 
        x = "", y = "") +
   guides(fill = guide_legend(title = "")) +
   facet_grid(~ residency, scales = "free") + 
@@ -317,8 +318,8 @@ ggplot(demographic2, aes(x = age)) +
 produce_props <- function(column) {   
   # Drop rows and concatenate values from multiple columns
   processed <- safety |> 
-    drop_na(gender, ethnicity, all_of(column)) |> 
-    unite(eth_gender, ethnicity, gender, sep = " ")  
+    drop_na(gender, race_eth, all_of(column)) |> 
+    unite(re_gender, race_eth, gender, sep = " ")  
   
   # Additional processing to modify values and set factor levels   
   if (column == "involv") { 
@@ -331,20 +332,20 @@ produce_props <- function(column) {
   
   # Get proportions and modify values in a column
   processed <- processed |>   
-    count(eth_gender, !!sym(column)) |>
-    group_by(eth_gender) |>
+    count(re_gender, !!sym(column)) |>
+    group_by(re_gender) |>
     mutate(prop = n / sum(n), 
            pct = if_else(      
              prop >= 0.05, percent(prop, accuracy = 1), "" 
              ), 
-           eth_gender = case_when(
-             eth_gender == "Other Female" ~ "Females of Other Ethnicities",
-             eth_gender == "Other Male" ~ "Males of Other Ethnicities",
-             !str_detect(eth_gender, "Other") ~ paste0(eth_gender, "s") 
+           re_gender = case_when(
+             re_gender == "Other Female" ~ "Females of Other Races/Ethn.",
+             re_gender == "Other Male" ~ "Males of Other Races/Ethn.",
+             !str_detect(re_gender, "Other") ~ paste0(re_gender, "s") 
              ) |>       
                         factor(levels = c("White Females", "White Males", 
-                                          "Females of Other Ethnicities",  
-                                          "Males of Other Ethnicities", 
+                                          "Females of Other Races/Ethn.",  
+                                          "Males of Other Races/Ethn.", 
                                           "Black Females", "Black Males"))) |>
     ungroup() |> 
     select(-n)
@@ -358,9 +359,8 @@ involvement <- produce_props("involv")
 interaction_quant <- produce_props("int_feel")
 
 # Output the stacked bar charts to display the proportions
-figure3 <- plot_props(involvement, "eth_gender", "prop", "involv", -17.5)
-figure4 <- plot_props(interaction_quant, "eth_gender", "prop", "int_feel", 
-                      -17.5) 
+figure3 <- plot_props(involvement, "re_gender", "prop", "involv", -14)
+figure4 <- plot_props(interaction_quant, "re_gender", "prop", "int_feel", -14) 
 
 # Tokenize to generate n-grams, drop rows, and get term frequencies
 interaction_qual <- safety |>  
@@ -420,7 +420,7 @@ ggplot(interaction_qual, aes(x = ngram, y = n, fill = sentiment)) +
 interaction_dtm <- safety |> 
   tokenize_text("int_comment") |>
   filter(type == "unigram") |>
-  drop_na(ethnicity) |>
+  drop_na(race_eth) |>
   add_count(ngram) |>
   filter(between(n, 2, 65) & !ngram %in% c("black", "comment", "cop", 
                                            "department", "department's", 
@@ -428,8 +428,8 @@ interaction_dtm <- safety |>
                                            "policeman", "public", "safety", 
                                            "ward", "white")) |>
   select(-n) |>
-  count(ethnicity, ngram) |>
-  cast_dtm(document = ethnicity, term = ngram, value = n) |>
+  count(race_eth, ngram) |>
+  cast_dtm(document = race_eth, term = ngram, value = n) |>
   as.matrix()
 
 # Perform hyperparameter tuning to get the optimal number of topics
@@ -500,11 +500,11 @@ interaction_lda_op2 <- interaction_lda |>
 
 # Select the columns and drop rows
 effect_df <- safety |>  
-  select(gender, ethnicity, age, int_freq, ward, mpd_effect, police_effect) |>
+  select(gender, race_eth, age, int_freq, ward, mpd_effect, police_effect) |>
   drop_na() |>
   # Set factor levels and modify values in columns
   mutate(gender = fct_relevel(gender, "Female"), 
-         ethnicity = fct_relevel(ethnicity, "White"),
+         race_eth = fct_relevel(race_eth, "White"),
          int_freq = fct_relevel(int_freq, "Less than Monthly"),
          across(c(mpd_effect, police_effect), ~ if_else(  
            .x == "Effective", 1, 0  
@@ -516,16 +516,16 @@ cor(effect_df$age, effect_df$police_effect)
 
 # Perform chi-square tests
 chisq.test(effect_df$gender, effect_df$mpd_effect)
-chisq.test(effect_df$ethnicity, effect_df$mpd_effect)
+chisq.test(effect_df$race_eth, effect_df$mpd_effect)
 chisq.test(effect_df$int_freq, effect_df$mpd_effect)
 chisq.test(effect_df$gender, effect_df$police_effect)
-chisq.test(effect_df$ethnicity, effect_df$police_effect)
+chisq.test(effect_df$race_eth, effect_df$police_effect)
 chisq.test(effect_df$int_freq, effect_df$police_effect)
 
 # Run the multivariate logistic regression models with fixed effects
-effect_lr1 <- glm(mpd_effect ~ gender + ethnicity + age + int_freq + ward, 
+effect_lr1 <- glm(mpd_effect ~ gender + race_eth + age + int_freq + ward, 
                   family = binomial, data = effect_df)
-effect_lr2 <- glm(police_effect ~ gender + ethnicity + age + int_freq + ward,   
+effect_lr2 <- glm(police_effect ~ gender + race_eth + age + int_freq + ward,   
                   family = binomial, data = effect_df) 
 
 # Confirm no multicollinearity among predictors and linearity in the log odds
@@ -550,8 +550,8 @@ effect_table <- map_dfc(list(effect_lr1, effect_lr2), function(lr) {
         ),
       factor = case_when(   
         factor == "age" ~ "Age",
-        factor == "ethnicityBlack" ~ "Black",
-        factor == "ethnicityOther" ~ "Other",
+        factor == "race_ethBlack" ~ "Black",
+        factor == "race_ethOther" ~ "Other",
         factor == "genderMale" ~ "Male", 
         factor == "int_freqAt Least Monthly" ~ "At Least Monthly"  
         )) |> 
@@ -559,15 +559,15 @@ effect_table <- map_dfc(list(effect_lr1, effect_lr2), function(lr) {
     # Drop columns, rename a column, and add rows 
     select(-c(SE, z, p)) |>
     rename(Variable = factor) |>
-    bind_rows(tibble(Variable = c("Ethnicity", "White", "Gender", "Female", 
+    bind_rows(tibble(Variable = c("Race/Ethnicity", "White", "Gender", "Female", 
                                   "Interaction", "Less than Monthly"),  
                      AME = c("", "—", "", "—", "", "—"), 
                      `95% CI` = c("", "—", "", "—", "", "—"),
                      `p-value` = c("", "", "", "", "", ""))) |>
-    # Change the order of the rows and modify values of a column
-    slice(1, 6, 7, 2, 3, 8, 9, 4, 10, 11, 5) |>
+    # Change the order of the rows and modify values of a column 
+    slice(1, 6, 7, 4, 5, 8, 9, 2, 10, 11, 3) |>
     mutate(Variable = if_else(  
-      !Variable %in% c("Age", "Ethnicity", "Gender", "Interaction"), 
+      !Variable %in% c("Age", "Race/Ethnicity", "Gender", "Interaction"), 
       paste0("\u00A0\u00A0\u00A0\u00A0", Variable), Variable 
       ))    
   
@@ -588,8 +588,8 @@ effect_table <- map_dfc(list(effect_lr1, effect_lr2), function(lr) {
 
 # Create a table to display the outputs from the regression models
 gt(effect_table) |>
-  tab_header(title = md("**Table 1: Comparative Results of Multivariate Logistic
-                           Regression Models**")) |>
+  tab_header(title = md("**Table 1: Results of Multivariate Logistic Regression 
+                           Models on Police Effectiveness**")) |>
   cols_align(align = "center", columns = -Variable) |>
   cols_label(AME_one = "AME",
              `95% CI_one` = "95% CI", 
@@ -597,10 +597,10 @@ gt(effect_table) |>
              AME_two = "AME",
              `95% CI_two` = "95% CI",
              `p-value_two` = "p-value") |>
-  tab_spanner(label = "Model 1", columns = c(AME_one, `95% CI_one`, 
-                                             `p-value_one`)) |>
-  tab_spanner(label = "Model 2", columns = c(AME_two, `95% CI_two`, 
-                                             `p-value_two`)) |>
+  tab_spanner(label = "Metropolitan Police Department", 
+              columns = c(AME_one, `95% CI_one`, `p-value_one`)) |>
+  tab_spanner(label = "United States Police Force", 
+              columns = c(AME_two, `95% CI_two`, `p-value_two`)) |>
   tab_footnote(footnote = "Includes fixed effects for D.C. wards") |>
   tab_footnote(footnote = "AME = Average Marginal Effect, CI = Confidence 
                            Interval") |>
@@ -612,25 +612,25 @@ gt(effect_table) |>
 effect_tfidf <- safety |>
   tokenize_text("imp_qual") |>  
   filter(type == "unigram") |> 
-  drop_na(ethnicity) |>
-  count(ethnicity, ngram) |> 
+  drop_na(race_eth) |>
+  count(race_eth, ngram) |> 
   filter(n > 3) |> 
-  bind_tf_idf(ngram, ethnicity, n) |>
+  bind_tf_idf(ngram, race_eth, n) |>
   select(-c(tf, idf)) |>
   # Filter based on the set conditions
-  filter((ethnicity == "Black" & ngram %in% c("alert", "consistency", "genuine", 
-                                              "service")) |
-         (ethnicity == "Other" & ngram %in% c("competent", "culture", 
-                                              "diverse")) | 
-         (ethnicity == "White" & ngram %in% c("awareness", "connection", 
-                                              "lead"))) |>  
+  filter((race_eth == "Black" & ngram %in% c("alert", "consistency", "genuine", 
+                                             "service")) |
+         (race_eth == "Other" & ngram %in% c("competent", "culture", 
+                                             "diverse")) | 
+         (race_eth == "White" & ngram %in% c("awareness", "connection", 
+                                             "lead"))) |>  
   # Modify values in a column and create a new column
   mutate(ngram = str_to_title(ngram), 
          scaled_tf_idf = tf_idf * 1000) 
 
 # Create a bar chart to display scaled tf-idf scores 
 ggplot(effect_tfidf, aes(x = reorder(ngram, scaled_tf_idf), y = scaled_tf_idf, 
-                         fill = ethnicity)) +
+                         fill = race_eth)) +
   geom_col(width = 0.825) +
   geom_hline(yintercept = 0, linewidth = 1.35, color = "#000000") +
   scale_fill_manual(values = c("#0078ae", "#5e9732", "#ffac1c")) +
